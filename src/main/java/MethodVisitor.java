@@ -205,12 +205,13 @@ public class MethodVisitor extends VoidVisitorAdapter<Double> {
     /**
      * 在每次访问类之前会调用的
      */
-    public boolean classStart(CompilationUnit cu, Double score) {
+    public boolean classStart(String name, Double score, String features) {
         contexts = new ArrayList<>();
         if (Main.LEVEL == "CLASS") {
             try {
-                fileOutputStream.write(("class_name:" + cu.findAll(ClassOrInterfaceDeclaration.class).get(0).getNameAsString() + "\n").getBytes());
+                fileOutputStream.write(("class_name:" + name + "\n").getBytes());
                 fileOutputStream.write(("score:" + score.toString() + "\n").getBytes());
+                fileOutputStream.write(("features:" + features + "\n").getBytes());
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();

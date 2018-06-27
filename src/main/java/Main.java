@@ -21,10 +21,12 @@ public class Main {
 
     /**
      * 递归的找到当前目录(文件)下所有的文件
-     * @param file
+     * @param path
      * @param score
+     * @param features
      */
-    public static void parseFiles(File file, Double score) {
+    public static void parseFiles(String path, Double score, String features) {
+        /*
         if (!file.exists())
             return;
         if (file.isFile()) {
@@ -32,7 +34,7 @@ public class Main {
             try {
                 System.out.println("Parsing " + file.getName() + "...");
                 cu = JavaParser.parse(file);
-                if (!visitor.classStart(cu, score))
+                if (!visitor.classStart(cu, score, features))
                     return;
                 visitor.visit(cu, score);
                 visitor.classEnd();
@@ -42,8 +44,28 @@ public class Main {
             }
             return;
         }
-        for (File child : file.listFiles()) {
-            parseFiles(child, score);
+        */
+        CompilationUnit cu;
+        try {
+            System.out.println("Parsing " + path + "...");
+            String[] elements = path.split("\\$");
+            cu = JavaParser.parse(new File(elements[0] + ".java"));
+            if (!visitor.classStart(path, score, features))
+                return;
+            if (elements.length > 1) {
+                List<ClassOrInterfaceDeclaration> classes = cu.findAll(ClassOrInterfaceDeclaration.class);
+                for (ClassOrInterfaceDeclaration c : classes) {
+                    if (c.getNameAsString().equals(elements[elements.length - 1])) {
+                        c.accept(visitor, score);
+                    }
+                }
+            } else {
+                visitor.visit(cu, score);
+            }
+            visitor.classEnd();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
         }
     }
     public static void main(String[] args) {
@@ -63,10 +85,12 @@ public class Main {
                 // 输出当前进度
                 System.out.println("[" + (i + 1) + "/" + lines.size() + "]");
                 i = i + 1;
-                int index = line.indexOf(",");
-                String number = line.substring(0, index);
-                String path = line.substring(index + 1);
-                parseFiles(new File(path), Double.parseDouble(number));
+                int index1 = line.indexOf(",");
+                String number = line.substring(0, index1);
+                int index2 = line.indexOf(",", index1 + 1);
+                String path = line.substring(index1 + 1, index2);
+                String features = line.substring(index2 + 1);
+                parseFiles(path, Double.parseDouble(number), features);
             }
             // 将Map存储到硬盘上
             visitor.save(inputName);
